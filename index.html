@@ -6,31 +6,20 @@
 <title>AI Exposure Explorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;700;800&family=Noto+Sans:wght@400;500;600&family=Noto+Sans+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: filter bar over a main view (map / movers / list) with a sticky occupation panel on the right; stacks on phones.
    Colour: one indigo ramp from "not exposed" (pale grey-blue) to "gradient 4" (deep indigo); dark mode runs the other way (brighter = more exposed). */
 :root{
-  --bg:#F5F6F9; --surface:#FFFFFF; --ink:#13171F; --ink2:#47505F; --muted:#76808F; --line:#DCE0E7; --accent:#2A3EA3; --hover:#EDEFF4;
-  --r0:#E4E7EE; --r1:#C9D8F0; --r2:#A2B9E6; --r3:#7396D8; --r4:#4468BF; --r5:#1D2E82;
-  --dn:#D2691E; --mid:#ECEEF2; --up:#2F4BB5;
-  --f-display:'Bricolage Grotesque','IBM Plex Sans',system-ui,sans-serif;
-  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#F7F8FA; --surface:#FFFFFF; --ink:#1F1F1F; --ink2:#454E5B; --muted:#66707D; --line:#D6DCE2; --accent:#2F37C5; --blue:#0064B4; --blue-d:#00508C; --hover:#EEF3FF; --coral:#F5425A; --well:#DDE3EA; --wellb:#B9C4D0; --box:#EDF4FB; --boxb:#C8D9EB; color-scheme:light;
+  --f-display:'Overpass','Noto Sans',system-ui,sans-serif;
+  --f-body:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'Noto Sans Mono',ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E1116; --surface:#161A21; --ink:#E8ECF2; --ink2:#AFB7C5; --muted:#7F8899; --line:#29303A; --accent:#8FA8FF; --hover:#1E232C;
-  --r0:#262C37; --r1:#31456B; --r2:#3E5FA0; --r3:#5A82D0; --r4:#8AAAF0; --r5:#C4D5FF;
-  --dn:#E58A4B; --mid:#2A303A; --up:#8AAAF0; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0E1116; --surface:#161A21; --ink:#E8ECF2; --ink2:#AFB7C5; --muted:#7F8899; --line:#29303A; --accent:#8FA8FF; --hover:#1E232C;
-  --r0:#262C37; --r1:#31456B; --r2:#3E5FA0; --r3:#5A82D0; --r4:#8AAAF0; --r5:#C4D5FF;
-  --dn:#E58A4B; --mid:#2A303A; --up:#8AAAF0; color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0}
-img{max-width:100%}
-[hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 32px}
+html{overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:0 28px}
 .wrap{max-width:1500px;margin:0 auto}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -53,7 +42,7 @@ select{background:var(--surface);border:1px solid var(--line);border-radius:8px;
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
 .seg button{border:0;background:transparent;padding:8px 12px;color:var(--ink2);white-space:nowrap}
 .seg button+button{border-left:1px solid var(--line)}
-.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--ink);color:var(--bg);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:500}
 .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:-6px}
 .tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
 .tools .grp{display:flex;align-items:center;gap:8px}
@@ -171,64 +160,127 @@ footer dt{font-weight:500;color:var(--ink2);white-space:nowrap}
 footer dd{margin:0}
 @media (max-width:560px){.kp{grid-template-columns:repeat(3,minmax(0,1fr))}.kp .big{font-size:18px}.ph h2{font-size:21px}.seg button{padding:8px 9px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ILO look: blue band, tabs, well, coral coverage band */
+.topbar{background:var(--accent);color:#fff;margin-inline:-16px;padding:22px 16px 16px;margin-bottom:16px}
+.tb{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-start;justify-content:space-between}
+.tb-logo{flex:none}.tb-logo img{height:50px;display:block}
+.tb-title{flex:1 1 380px;min-width:0}
+.ilo-title{font-family:var(--f-display);font-size:clamp(22px,3vw,30px);font-weight:700;line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.ilo-sub{margin:0;font-size:14px;opacity:.96;max-width:70ch}
+.ilo-sub a,.ilo-meta a{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.ilo-meta{flex:0 1 260px;font-size:12px;line-height:1.4;text-align:right}
+@media (max-width:700px){.ilo-meta{text-align:left;flex-basis:100%}}
+.well{background:var(--well);border:1px solid var(--wellb);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.10);padding:14px;margin-bottom:16px}
+.well .bar{margin-bottom:10px}.well .chips{margin-bottom:10px}
+.stats{margin-left:auto}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:-4px 0 12px}
+.tabs button{border:1px solid var(--line);border-bottom-color:transparent;background:#F8F9FB;color:var(--ink);padding:9px 16px;border-radius:6px 6px 0 0;margin-bottom:-1px}
+.tabs button:hover{background:var(--hover)}
+.tabs button[aria-selected="true"]{background:#fff;color:var(--accent);border-top:3px solid var(--accent);border-bottom-color:#fff;font-weight:600;padding-top:7px}
+h1,h2,.ph h2,.ilo-title,.kp .big{font-family:var(--f-display)}
+.ptitle>span:first-child::before{content:'';display:inline-block;border-left:8px solid var(--coral);border-top:5px solid transparent;border-bottom:5px solid transparent;margin-right:7px;vertical-align:-1px}
+.cov{background:var(--coral);color:#fff;margin:36px -16px 0;padding:30px 16px 26px}
+.cov h3{text-align:center;font-family:var(--f-display);font-size:22px;margin:0 0 16px}
+.cov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;max-width:1100px;margin:0 auto}
+.cov-card{background:rgba(255,255,255,.96);border-radius:10px;padding:16px 10px;text-align:center;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.cov-card b{display:block;font-family:var(--f-display);font-size:32px;line-height:1.05;color:var(--accent)}
+.cov-card span{display:block;margin-top:6px;font-size:13px;font-weight:600}
+.method{background:var(--box);border:1px solid var(--boxb);border-radius:10px;padding:22px 26px;margin:18px auto 0;max-width:1100px;line-height:1.55;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.method h4{margin:0 0 14px;color:var(--accent);font-family:var(--f-display);font-size:24px}
+.method h5{margin:22px 0 10px;color:var(--accent);font-family:var(--f-display);font-size:18px}
+.method p{margin:0 0 12px}.method ul{margin:6px 0 12px;padding-left:22px}.method li{margin-bottom:6px}
+.method hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.method a,footer a{color:var(--accent)}
+.src,.method,.ilo-meta{overflow-wrap:anywhere}
+.src{max-width:1100px;margin:16px auto 0;color:var(--muted);font-size:12.5px}
+.sc .plotbg{fill:#EBEBEB}
+.sc .gw{stroke:#fff;stroke-width:1}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header>
-    <div>
-      <h1>AI Exposure Explorer</h1>
-      <p class="sub">Task-level exposure to generative AI for 427 occupations in the ISCO-08 classification. Browse the map, compare 2023 with 2025, or open an occupation to see every task and the reasoning behind its score. Switch the level to Poland 6-digit to see the 2,541 detailed occupations behind the ISCO-08 scores.</p>
-    </div>
-    <div class="stats" id="stats"></div>
-  </header>
-
-  <div class="bar">
-    <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
-      <input id="q" type="search" placeholder="Search occupation or ISCO code, e.g. translators or 2643" autocomplete="off" aria-label="Search occupations"></label>
-    <label class="chk"><input type="checkbox" id="inclTasks"> <span id="inclLbl">Also search task text</span></label>
-    <select id="g1" aria-label="Filter by ISCO major group"></select>
+<div class="topbar"><div class="wrap tb">
+  <div class="tb-logo"><img src="ILO-logo.png" alt="International Labour Organization" onerror="this.parentNode.hidden=true"></div>
+  <div class="tb-title">
+    <div class="ilo-title">Occupations Exposed to Generative AI</div>
+    <p class="ilo-sub">Explore the <a href="https://www.ilo.org/publications/generative-ai-and-jobs-refined-global-index-occupational-exposure" target="_blank" rel="noopener">ILO AI Exposure Index (Gmyrek et al., 2025)</a> by occupation and task, for ISCO-08 and for Poland's national classification of occupations.</p>
   </div>
-  <div class="chips" id="chips" role="group" aria-label="Filter by exposure category"></div>
+  <div class="ilo-meta"><strong>Maintainer:</strong> Pawel Gmyrek<br>gmyrek@ilo.org<br><a href="https://github.com/pgmyrek" target="_blank" rel="noopener">github.com/pgmyrek</a><br><br><strong>Page updated:</strong> 7 October 2026</div>
+</div></div>
+
+<div class="wrap">
+  <div class="well">
+    <div class="bar">
+      <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
+        <input id="q" type="search" placeholder="Search occupation or ISCO code, e.g. translators or 2643" autocomplete="off" aria-label="Search occupations"></label>
+      <label class="chk"><input type="checkbox" id="inclTasks"> <span id="inclLbl">Also search task text</span></label>
+      <select id="g1" aria-label="Filter by ISCO major group"></select>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by exposure category"></div>
+    <div class="tools">
+      <div class="grp"><span class="lbl">Level</span><div class="seg" id="lvlSeg"><button data-l="4" aria-pressed="true">ISCO-08 4-digit</button><button data-l="6" aria-pressed="false">Poland 6-digit</button></div></div>
+      <div class="grp" id="colorGrp"><span class="lbl">Colour</span>
+        <div class="seg" id="colorSeg">
+          <button data-c="grad" aria-pressed="true">Category</button>
+          <button data-c="mean" aria-pressed="false">Mean score</button>
+          <button data-c="chg" aria-pressed="false">Change</button>
+        </div></div>
+      <div class="grp" id="sizeGrp"><span class="lbl">Box size</span>
+        <div class="seg" id="sizeSeg">
+          <button data-s="eq" aria-pressed="true">Equal</button>
+          <button data-s="tasks" aria-pressed="false">Tasks</button>
+        </div></div>
+    </div>
+  </div>
 
   <div class="layout">
     <section class="card main" aria-label="Occupation views">
-      <div class="bar" style="margin-bottom:6px">
-        <div class="seg" role="tablist" id="views">
-          <button role="tab" data-v="map" aria-selected="true">Map</button>
-          <button role="tab" data-v="move" id="moveTab" aria-selected="false">2023 vs 2025</button>
-          <button role="tab" data-v="list" aria-selected="false">List</button>
-        </div>
-        <div class="tools">
-          <div class="grp"><span class="lbl">Level</span><div class="seg" id="lvlSeg"><button data-l="4" aria-pressed="true">ISCO-08 4-digit</button><button data-l="6" aria-pressed="false">Poland 6-digit</button></div></div>
-          <div class="grp" id="colorGrp"><span class="lbl">Colour</span>
-            <div class="seg" id="colorSeg">
-              <button data-c="grad" aria-pressed="true">Category</button>
-              <button data-c="mean" aria-pressed="false">Mean score</button>
-              <button data-c="chg" aria-pressed="false">Change</button>
-            </div></div>
-          <div class="grp" id="sizeGrp"><span class="lbl">Box size</span>
-            <div class="seg" id="sizeSeg">
-              <button data-s="eq" aria-pressed="true">Equal</button>
-              <button data-s="tasks" aria-pressed="false">Tasks</button>
-            </div></div>
-        </div>
+      <div class="tabs" role="tablist" id="views">
+        <button role="tab" data-v="map" aria-selected="true">Map</button>
+        <button role="tab" data-v="spread" aria-selected="false">Mean vs spread</button>
+        <button role="tab" data-v="move" id="moveTab" aria-selected="false">2023 vs 2025</button>
+        <button role="tab" data-v="fig17" id="figTab" aria-selected="false">Figure 17</button>
+        <button role="tab" data-v="list" aria-selected="false">List</button>
       </div>
       <div id="view"></div>
       <div class="scale" id="scale"></div>
       <p class="note" id="note"></p>
     </section>
-
     <aside class="card panel" id="panel" aria-live="polite"></aside>
   </div>
+</div>
 
-  <footer>
-    <p>Scores run from 0 (the task cannot be automated with generative AI) to 1 (it could be fully automated). An occupation's score is the mean of its task scores; its category depends on that mean and on how much the tasks differ from one another.</p>
-    <details><summary>What the categories mean</summary>
-      <dl id="defs"></dl></details>
-    <p>Source: Gmyrek, Berg, Kamiński, Konopczyński, Ładna, Nafradi, Rosłaniec and Troszyński (2025), <a href="https://doi.org/10.54394/HETP0387" target="_blank" rel="noopener">Generative AI and Jobs: A Refined Global Index of Occupational Exposure</a>, ILO Working Paper 140. Data: <a href="https://github.com/pgmyrek/2025_GenAI_scores_ISCO08" target="_blank" rel="noopener">github.com/pgmyrek/2025_GenAI_scores_ISCO08</a>. Polish 6-digit data: <a href="https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations" target="_blank" rel="noopener">github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations</a>, the Polish national classification of occupations (KZiS) scored with the same method; see also the <a href="https://www.nask.pl/indeks" target="_blank" rel="noopener">ILO-NASK index for Poland</a>. Prototype for review.</p>
-  </footer>
+<div class="cov"><h3>Data coverage</h3><div class="cov-grid" id="cov"></div></div>
+
+<div class="wrap">
+  <div class="method">
+    <h4>Understanding the AI Exposure Index</h4>
+    <p>The <a href="https://www.ilo.org/publications/generative-ai-and-jobs-refined-global-index-occupational-exposure" target="_blank" rel="noopener">ILO AI Exposure Index (Gmyrek et al., 2025)</a> estimates the technical potential for Generative AI to perform the tasks that make up existing occupations. It is designed to assess occupational exposure to current Generative AI capabilities and should not be interpreted as a prediction of job loss or employment outcomes.</p>
+    <p>The methodology begins by evaluating individual work tasks. Each task receives a potential automation score between 0 and 1, where 0 indicates that current Generative AI cannot perform the task and 1 indicates that it can be performed entirely using current Generative AI capabilities.</p>
+    <p>Occupation-level exposure is then calculated by combining the task-level scores using two complementary indicators:</p>
+    <ul>
+      <li><strong>Average exposure (mean)</strong> – the overall level of Generative AI exposure across all tasks within an occupation.</li>
+      <li><strong>Task variability (standard deviation)</strong> – the degree to which exposure differs across tasks within the same occupation.</li>
+    </ul>
+    <p>Together, these indicators are used to <a href="https://www.ilo.org/resource/article/how-might-generative-ai-impact-different-occupations#occupations" target="_blank" rel="noopener">classify occupations into six exposure categories</a> that reflect both the overall level and consistency of Generative AI exposure across their task profiles.</p>
+    <hr>
+    <h5>Exposure categories</h5>
+    <ul>
+      <li><strong>Gradient 4 – Highest exposure, low task variability.</strong> Occupations in which most tasks exhibit a consistently high potential for automation using current Generative AI technologies.</li>
+      <li><strong>Gradient 3 – Significant exposure, high task variability.</strong> Occupations with above-average exposure, where many tasks have substantial automation potential while others remain considerably less exposed.</li>
+      <li><strong>Gradient 2 – Moderate exposure, high task variability.</strong> Occupations containing a balanced mix of highly exposed and minimally exposed tasks, resulting in moderate overall exposure.</li>
+      <li><strong>Gradient 1 – Low exposure, high task variability.</strong> Occupations with generally limited overall exposure, although some individual tasks may still have relatively high automation potential.</li>
+      <li><strong>Minimal Exposure.</strong> Occupations with low overall exposure and only limited automation potential across their task profiles.</li>
+      <li><strong>Not Exposed.</strong> Occupations whose current task profiles show little or no meaningful potential for automation using Generative AI.</li>
+    </ul>
+    <hr>
+    <p><strong>Interpreting the results.</strong> The exposure gradients indicate the technical potential for Generative AI to automate or support tasks within occupations. They should not be interpreted as measures of employment risk or estimates of future job losses.</p>
+    <p>The findings suggest that very few occupations consist entirely of automatable tasks. Instead, most occupations combine tasks with different levels of exposure, implying that Generative AI is more likely to transform how work is performed than to replace occupations in their entirety.</p>
+    <p><strong>Poland level.</strong> The Polish national classification of occupations (KZiS) lists 2,541 detailed occupations, each mapped to an ISCO-08 group. Its tasks are scored with the same method and the same category rules as the ISCO-08 index.</p>
+  </div>
+  <p class="src">Source: Gmyrek, Berg, Kamiński, Konopczyński, Ładna, Nafradi, Rosłaniec and Troszyński (2025), <a href="https://doi.org/10.54394/HETP0387" target="_blank" rel="noopener">Generative AI and Jobs: A Refined Global Index of Occupational Exposure</a>, ILO Working Paper 140. Data: <a href="https://github.com/pgmyrek/2025_GenAI_scores_ISCO08" target="_blank" rel="noopener">github.com/pgmyrek/2025_GenAI_scores_ISCO08</a> and <a href="https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations" target="_blank" rel="noopener">github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations</a>. See also the <a href="https://www.nask.pl/indeks" target="_blank" rel="noopener">ILO-NASK index for Poland</a>. Prototype for review.</p>
 </div>
 <div class="tip" id="tip" hidden></div>
 
@@ -245,6 +297,9 @@ const GR=[
  {k:'Exposed: Gradient 3',n:'Gradient 3',d:'Above-moderate average (0.5 to 0.6). Many tasks have clear potential to be done with generative AI.'},
  {k:'Exposed: Gradient 4',n:'Gradient 4',d:'High and consistent exposure (mean of 0.6 or more) across tasks. The highest potential for transformation.'}];
 const GI={};GR.forEach((g,i)=>GI[g.k]=i);
+const GCOL=['#BDBDBD','#90EE90','#4682B4','#87CEEB','#EE9A00','#D7191C'];
+const GSYM=[d3.symbolCircle,d3.symbolCircle,d3.symbolSquare,d3.symbolCircle,d3.symbolDiamond,d3.symbolTriangle];
+const GSZ=[34,34,70,80,100,110];
 const st={view:'map',color:'grad',size:'eq',q:'',tasks:false,grads:new Set(GR.map((_,i)=>i)),g1:'all',sel:null,zoom:[],sort:{k:'m25',d:-1},tsort:'high'};
 let D=null,O6=null,occ=[],occ6=[],byCode={},byCode6={},JC={},KC={};st.level='4';
 const pool=()=>st.level==='6'?occ6:occ;
@@ -252,8 +307,8 @@ const pool=()=>st.level==='6'?occ6:occ;
 /* ---------- theme-aware colours ---------- */
 function cv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
 let C={};
-function readTheme(){C={ramp:[0,1,2,3,4,5].map(i=>cv('--r'+i)),dn:cv('--dn'),mid:cv('--mid'),up:cv('--up'),surface:cv('--surface')};
-  C.mean=d3.scaleLinear().domain([0.1,0.7]).range([C.ramp[0],C.ramp[5]]).interpolate(d3.interpolateRgb).clamp(true);
+function readTheme(){C={ramp:GCOL,dn:'#F5425A',mid:'#EEF0F4',up:'#2F37C5',surface:'#FFFFFF'};
+  C.mean=d3.scaleLinear().domain([0.1,0.7]).range(['#E3ECF8','#2F37C5']).interpolate(d3.interpolateRgb).clamp(true);
   C.chg=v=>{const t=Math.max(-1,Math.min(1,v/0.12));return t<0?d3.interpolateRgb(C.mid,C.dn)(-t):d3.interpolateRgb(C.mid,C.up)(t)}}
 function ink(bg){const c=d3.color(bg);if(!c)return '#111';const l=(0.2126*c.r+0.7152*c.g+0.0722*c.b)/255;return l>0.56?'#10141b':'#ffffff'}
 function colorOf(o){return st.color==='grad'?C.ramp[o.gi]:st.color==='mean'?C.mean(o.m25):C.chg(o.dm)}
@@ -279,11 +334,11 @@ const hideTip=()=>tip.hidden=true;
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 /* ---------- selection ---------- */
-function select(code,scroll){st.sel=code;paintSel();renderPanel();
+function select(code,scroll){st.sel=code;if(st.view==='fig17')renderFig17();paintSel();renderPanel();
   if(scroll&&innerWidth<1040){const p=$('#panel');p.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'})}}
 function paintSel(){
   document.querySelectorAll('[data-code]').forEach(el=>el.classList.toggle('sel',el.dataset.code==st.sel));
-  document.querySelectorAll('circle.pt').forEach(c=>{const on=c.dataset.code==st.sel;c.setAttribute('stroke',on?'var(--ink)':C.surface);c.setAttribute('stroke-width',on?2.5:1.5);if(on)c.parentNode.parentNode.appendChild(c.parentNode)})}
+  document.querySelectorAll('.pt').forEach(c=>{const on=c.dataset.code==st.sel;c.setAttribute('stroke',on?'#1F1F1F':'#fff');c.setAttribute('stroke-width',on?2.4:0.8);if(on)c.parentNode.parentNode.appendChild(c.parentNode)})}
 
 /* ---------- MAP ---------- */
 function tree(){
@@ -325,45 +380,108 @@ function renderMap(){
   box.appendChild(frag);
   renderScale();
   $('#note').textContent=st.level==='6'?'Poland\u2019s national classification (KZiS) lists 2,541 detailed occupations, each mapped to an ISCO-08 group. Scores come from the same scoring method as the ISCO-08 index. Some national groups have no ISCO-08 task list and appear only here. Zoom in from the group headings to read labels. Box size is not employment.':st.size==='eq'?'Every occupation has the same box size, so area shows how many occupations a group has, not how many people work in it. Employment weights from ILO labour force data are the next step.':'Box size follows the number of tasks listed for the occupation in ISCO-08. It is not employment.'}
+function glyph(i){return `<svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true"><path d="${d3.symbol().type(GSYM[i]).size(GSZ[i]*1.2)()}" fill="${GCOL[i]}"/></svg>`}
 function renderScale(){
-  const s=$('#scale');
-  if(st.view!=='map'&&st.view!=='move'){s.innerHTML='';return}
-  if(st.color==='grad'){s.innerHTML='<span>Category</span>'+GR.map((g,i)=>`<span style="display:inline-flex;align-items:center;gap:5px"><i style="width:12px;height:12px;border-radius:3px;background:${C.ramp[i]};display:inline-block;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)"></i>${g.n}</span>`).join('');return}
-  if(st.color==='mean'){s.innerHTML=`<span class="mono">0.10</span><span class="ramp" style="background:linear-gradient(90deg,${C.ramp[0]},${C.ramp[5]})"></span><span class="mono">0.70</span><span>2025 mean score</span>`;return}
-  s.innerHTML=`<span class="mono">−0.12 or lower</span><span class="ramp" style="background:linear-gradient(90deg,${C.dn},${C.mid},${C.up})"></span><span class="mono">+0.12 or higher</span><span>Change in mean score, 2023 to 2025</span>`}
+  const s=$('#scale'),sc=st.view==='spread'||st.view==='move';
+  if(st.view==='list'||st.view==='fig17'){s.innerHTML='';return}
+  if(st.color==='grad'){s.innerHTML='<span>Category</span>'+GR.map((g,i)=>`<span style="display:inline-flex;align-items:center;gap:5px">${sc?glyph(i):`<i style="width:12px;height:12px;border-radius:3px;background:${GCOL[i]};display:inline-block;border:1px solid rgba(0,0,0,.15)"></i>`}${g.n}</span>`).join('');return}
+  const tail=sc?'<span>Marker shape shows the category</span>':'';
+  if(st.color==='mean'){s.innerHTML=`<span class="mono">0.10</span><span class="ramp" style="background:linear-gradient(90deg,#E3ECF8,#2F37C5)"></span><span class="mono">0.70</span><span>2025 mean score</span>${tail}`;return}
+  s.innerHTML=`<span class="mono">\u22120.12 or lower</span><span class="ramp" style="background:linear-gradient(90deg,#F5425A,#EEF0F4,#2F37C5)"></span><span class="mono">+0.12 or higher</span><span>Change in mean score, 2023 to 2025</span>${tail}`}
 
-/* ---------- MOVERS (scatter) ---------- */
-function renderMove(){
+/* ---------- SCATTER VIEWS ---------- */
+function scatter(o){
   const host=$('#view');host.innerHTML='<div class="sc"></div>';const el=host.firstChild;
-  const W=host.clientWidth||600,H=Math.round(Math.max(340,Math.min(W*0.82,620)));const m={l:44,r:14,t:12,b:40};
-  const x=d3.scaleLinear([0,0.8],[m.l,W-m.r]),y=d3.scaleLinear([0,0.8],[H-m.b,m.t]);
-  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Scatter of each occupation: mean score in 2023 on the horizontal axis, 2025 on the vertical axis');
-  const ticks=[0,0.2,0.4,0.6,0.8];
+  const W=host.clientWidth||600,H=Math.round(Math.max(340,Math.min(W*0.82,620)));const m={l:58,r:14,t:12,b:42};
+  const x=d3.scaleLinear(o.xd,[m.l,W-m.r]),y=d3.scaleLinear(o.yd,[H-m.b,m.t]);
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',o.aria);
+  svg.append('rect').attr('class','plotbg').attr('x',m.l).attr('y',m.t).attr('width',W-m.l-m.r).attr('height',H-m.t-m.b);
   const ax=svg.append('g').attr('class','ax');
-  ticks.forEach(t=>{ax.append('line').attr('class','gl').attr('x1',m.l).attr('x2',W-m.r).attr('y1',y(t)).attr('y2',y(t));
-    ax.append('line').attr('class','gl').attr('y1',m.t).attr('y2',H-m.b).attr('x1',x(t)).attr('x2',x(t));
-    ax.append('text').attr('x',m.l-8).attr('y',y(t)+4).attr('text-anchor','end').text(t.toFixed(1));
-    ax.append('text').attr('x',x(t)).attr('y',H-m.b+16).attr('text-anchor','middle').text(t.toFixed(1))});
-  svg.append('line').attr('x1',x(0)).attr('y1',y(0)).attr('x2',x(0.8)).attr('y2',y(0.8)).attr('stroke',cv('--muted')).attr('stroke-dasharray','4 4');
-  svg.append('text').attr('x',x(0.8)-6).attr('y',y(0.8)+14).attr('text-anchor','end').text('no change');
-  svg.append('text').attr('x',(m.l+W-m.r)/2).attr('y',H-4).attr('text-anchor','middle').text('Mean task score, 2023 version');
-  svg.append('text').attr('transform',`translate(12,${(m.t+H-m.b)/2}) rotate(-90)`).attr('text-anchor','middle').text('Mean task score, 2025 version');
-  const g=svg.append('g');
-  const pts=occ.slice().sort((a,b)=>(match(b)?0:1)-(match(a)?0:1)).reverse();
-  const e=g.selectAll('g.p').data(pts).enter().append('g').attr('class','p').attr('opacity',o=>match(o)?1:0.14);
-  e.append('circle').attr('class','pt').attr('data-code',o=>o.c).attr('cx',o=>x(o.m23)).attr('cy',o=>y(o.m25)).attr('r',4.6).attr('fill',o=>colorOf(o)).attr('stroke',C.surface).attr('stroke-width',1.5);
-  e.append('circle').attr('class','hit').attr('cx',o=>x(o.m23)).attr('cy',o=>y(o.m25)).attr('r',9)
-    .on('pointermove',(ev,o)=>showTip(ev,o)).on('pointerleave',hideTip).on('click',(ev,o)=>{hideTip();select(o.c,true)});
-  // direct labels for the biggest movers among visible points
-  const vis=occ.filter(match).sort((a,b)=>Math.abs(b.dm)-Math.abs(a.dm)).slice(0,anyFilter()?6:7);const placed=[];
-  vis.forEach(o=>{const t=o.t.length>26?o.t.slice(0,25)+'…':o.t;const w=t.length*5.6+4;const px=x(o.m23),py=y(o.m25);
-    for(const [dx,dy,anc] of [[8,-6,'start'],[-8,-6,'end'],[8,14,'start'],[-8,14,'end']]){
-      const bx=anc==='start'?px+dx:px+dx-w,by=py+dy-10;
-      if(bx<m.l-2||bx+w>W-2||by<0||by+13>H-m.b)continue;
-      if(placed.some(p=>bx<p.x+p.w&&bx+w>p.x&&by<p.y+13&&by+13>p.y))continue;
-      placed.push({x:bx,y:by,w});svg.append('text').attr('class','tl').attr('x',px+dx).attr('y',py+dy).attr('text-anchor',anc).style('paint-order','stroke').style('stroke',C.surface).style('stroke-width',3).text(t);break}});
-  paintSel();renderScale();
-  $('#note').textContent='Each dot is one occupation. Dots above the dashed line scored higher in 2025 than in 2023. Hover or tap a dot to identify it; select to read its tasks. The 2023 and 2025 scores come from different scoring rounds, so small shifts are expected.'}
+  y.ticks(5).forEach(t=>{ax.append('line').attr('class','gw').attr('x1',m.l).attr('x2',W-m.r).attr('y1',y(t)).attr('y2',y(t));ax.append('text').attr('x',m.l-8).attr('y',y(t)+4).attr('text-anchor','end').text(t.toFixed(2))});
+  x.ticks(5).forEach(t=>{ax.append('line').attr('class','gw').attr('y1',m.t).attr('y2',H-m.b).attr('x1',x(t)).attr('x2',x(t));ax.append('text').attr('x',x(t)).attr('y',H-m.b+16).attr('text-anchor','middle').text(t.toFixed(1))});
+  if(o.diag){svg.append('line').attr('x1',x(o.xd[0])).attr('y1',y(o.xd[0])).attr('x2',x(o.xd[1])).attr('y2',y(o.xd[1])).attr('stroke','#66707D').attr('stroke-dasharray','4 4');
+    svg.append('text').attr('x',x(o.xd[1])-6).attr('y',y(o.xd[1])+14).attr('text-anchor','end').text('no change')}
+  svg.append('text').attr('x',(m.l+W-m.r)/2).attr('y',H-4).attr('text-anchor','middle').text(o.xl);
+  svg.append('text').attr('transform',`translate(11,${(m.t+H-m.b)/2}) rotate(-90)`).attr('text-anchor','middle').text(o.yl);
+  const k=st.level==='6'?0.5:1;
+  const pts=pool().slice().sort((a,b)=>(match(a)?1:0)-(match(b)?1:0));
+  const e=svg.append('g').selectAll('g.p').data(pts).enter().append('g').attr('class','p').attr('opacity',d=>match(d)?1:0.12).attr('transform',d=>`translate(${x(o.fx(d))},${y(o.fy(d))})`);
+  e.append('path').attr('class','pt').attr('data-code',d=>d.c).attr('d',d=>d3.symbol().type(GSYM[d.gi]).size(GSZ[d.gi]*k)()).attr('fill',d=>colorOf(d)).attr('stroke','#fff').attr('stroke-width',0.8);
+  e.append('circle').attr('class','hit').attr('r',st.level==='6'?6:9).on('pointermove',(ev,d)=>showTip(ev,d)).on('pointerleave',hideTip).on('click',(ev,d)=>{hideTip();select(d.c,true)});
+  if(o.labels){const vis=pool().filter(match).sort(o.labels.sort).slice(0,anyFilter()?6:o.labels.n);const placed=[];
+    vis.forEach(d=>{const t=d.t.length>26?d.t.slice(0,25)+'\u2026':d.t;const w=t.length*5.6+4;const px=x(o.fx(d)),py=y(o.fy(d));
+      for(const [dx,dy,anc] of [[8,-6,'start'],[-8,-6,'end'],[8,14,'start'],[-8,14,'end']]){
+        const bx=anc==='start'?px+dx:px+dx-w,by=py+dy-10;
+        if(bx<m.l-2||bx+w>W-2||by<0||by+13>H-m.b)continue;
+        if(placed.some(p=>bx<p.x+p.w&&bx+w>p.x&&by<p.y+13&&by+13>p.y))continue;
+        placed.push({x:bx,y:by,w});svg.append('text').attr('class','tl').attr('x',px+dx).attr('y',py+dy).attr('text-anchor',anc).style('paint-order','stroke').style('stroke','#EBEBEB').style('stroke-width',3).text(t);break}})}
+  paintSel();renderScale()}
+function renderMove(){
+  scatter({xd:[0,0.8],yd:[0,0.8],fx:d=>d.m23,fy:d=>d.m25,diag:true,xl:'Mean task score, 2023 version',yl:'Mean task score, 2025 version',
+    aria:'Scatter of each occupation: mean score in 2023 on the horizontal axis, 2025 on the vertical axis',labels:{n:7,sort:(a,b)=>Math.abs(b.dm)-Math.abs(a.dm)}});
+  $('#note').textContent='Each marker is one occupation. Markers above the dashed line scored higher in 2025 than in 2023. Hover or tap a marker to identify it, and select it to read its tasks. The 2023 and 2025 scores come from different scoring rounds, so small shifts are expected.'}
+function renderSpread(){
+  const ymax=Math.max(0.25,Math.ceil(d3.max(pool(),d=>d.s25)*20)/20+0.02);
+  scatter({xd:[0,0.8],yd:[0,ymax],fx:d=>d.m25,fy:d=>d.s25,diag:false,xl:'Mean score for occupation (2025)',yl:'SD of task scores at occupation level (2025)',
+    aria:'Scatter of each occupation: mean task score on the horizontal axis, spread of task scores on the vertical axis, coloured by exposure category'});
+  $('#note').textContent=(st.level==='6'?'Each marker is one Polish occupation. ':'Each marker is one occupation. ')+'The horizontal axis is the mean of its task scores and the vertical axis their spread (standard deviation), the two measures that define the exposure categories, as in Figure 16 of the working paper. Marker shape and colour show the category.'}
+
+
+/* ---------- FIGURE 17: 2023 vs 2025, mean vs SD with LOESS ---------- */
+function loess(pts,span,grid){
+  const n=pts.length,q=Math.max(3,Math.ceil(span*n));const out=[];
+  for(const x0 of grid){
+    const d=pts.map(p=>Math.abs(p[0]-x0)).sort((a,b)=>a-b);const h=Math.max(d[q-1],1e-6);
+    let S0=0,S1=0,S2=0,T0=0,T1=0;const w=[];
+    for(const p of pts){const u=Math.abs(p[0]-x0)/h;const wi=u<1?Math.pow(1-u*u*u,3):0;w.push(wi);S0+=wi;S1+=wi*p[0];S2+=wi*p[0]*p[0];T0+=wi*p[1];T1+=wi*p[0]*p[1]}
+    const den=S0*S2-S1*S1;if(S0<=0)continue;
+    let a,b;if(Math.abs(den)<1e-12){a=T0/S0;b=0}else{b=(S0*T1-S1*T0)/den;a=(T0-b*S1)/S0}
+    const yh=a+b*x0;
+    let rss=0,w2=0;
+    pts.forEach((p,i)=>{const wi=w[i];if(!wi)return;const r=p[1]-(a+b*p[0]);rss+=wi*r*r;w2+=wi*wi});
+    const sig=Math.sqrt(rss/Math.max(S0,1e-9));const neff=S0*S0/Math.max(w2,1e-9);const se=sig/Math.sqrt(Math.max(neff,2));
+    out.push({x:x0,y:yh,se:se})}
+  return out}
+function renderFig17(){
+  const host=$('#view');host.innerHTML='<div class="sc"></div>';const el=host.firstChild;
+  const W=host.clientWidth||600,H=Math.round(Math.max(340,Math.min(W*0.82,620)));const m={l:58,r:14,t:12,b:42};
+  const P=pool();const ymax=Math.max(0.3,Math.ceil(d3.max(P,d=>Math.max(d.s23,d.s25))*20)/20+0.02);
+  const x=d3.scaleLinear([0,0.8],[m.l,W-m.r]),y=d3.scaleLinear([0,ymax],[H-m.b,m.t]);
+  const G23='#7ED957',G23d='#3DB54A',B25='#2F6DB5',B25d='#1F4E9C';
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Scatter of occupations: mean task score on the horizontal axis and spread of task scores on the vertical axis, for the 2023 and 2025 versions, each with a smooth curve');
+  svg.append('rect').attr('class','plotbg').attr('x',m.l).attr('y',m.t).attr('width',W-m.l-m.r).attr('height',H-m.t-m.b);
+  const ax=svg.append('g').attr('class','ax');
+  y.ticks(5).forEach(t=>{ax.append('line').attr('class','gw').attr('x1',m.l).attr('x2',W-m.r).attr('y1',y(t)).attr('y2',y(t));ax.append('text').attr('x',m.l-8).attr('y',y(t)+4).attr('text-anchor','end').text(t.toFixed(2))});
+  x.ticks(5).forEach(t=>{ax.append('line').attr('class','gw').attr('y1',m.t).attr('y2',H-m.b).attr('x1',x(t)).attr('x2',x(t));ax.append('text').attr('x',x(t)).attr('y',H-m.b+16).attr('text-anchor','middle').text(t.toFixed(1))});
+  svg.append('text').attr('x',(m.l+W-m.r)/2).attr('y',H-4).attr('text-anchor','middle').text('Mean score for occupation');
+  svg.append('text').attr('transform',`translate(11,${(m.t+H-m.b)/2}) rotate(-90)`).attr('text-anchor','middle').text('SD of task scores at occupation level');
+  const grid=d3.range(0,0.801,0.01);
+  const sets=[{k:'2023',fx:d=>d.m23,fy:d=>d.s23,pc:G23,lc:G23d},{k:'2025',fx:d=>d.m25,fy:d=>d.s25,pc:B25,lc:B25d}];
+  sets.forEach(S=>{
+    const pts=P.map(d=>[S.fx(d),S.fy(d)]);const xs=d3.extent(pts,p=>p[0]);
+    const fit=loess(pts,0.75,grid.filter(g=>g>=xs[0]&&g<=xs[1]));
+    const area=d3.area().x(d=>x(d.x)).y0(d=>y(Math.max(0,d.y-1.96*d.se))).y1(d=>y(d.y+1.96*d.se)).curve(d3.curveBasis);
+    svg.append('path').attr('d',area(fit)).attr('fill','#9AA0A6').attr('opacity',0.35);
+    S.fit=fit});
+  [sets[0],sets[1]].forEach(S=>{
+    const g=svg.append('g');
+    g.selectAll('circle').data(P).enter().append('circle').attr('class','f17').attr('data-code',d=>d.c).attr('cx',d=>x(S.fx(d))).attr('cy',d=>y(S.fy(d))).attr('r',3.2).attr('fill',S.pc).attr('stroke','#fff').attr('stroke-width',0.5).attr('opacity',d=>match(d)?0.9:0.1);
+    svg.append('path').attr('d',d3.line().x(d=>x(d.x)).y(d=>y(d.y)).curve(d3.curveBasis)(S.fit)).attr('fill','none').attr('stroke',S.lc).attr('stroke-width',2.4)});
+  // selected occupation: link its two positions
+  const so=byCode[st.sel];
+  if(so){svg.append('line').attr('x1',x(so.m23)).attr('y1',y(so.s23)).attr('x2',x(so.m25)).attr('y2',y(so.s25)).attr('stroke','#1B1F2A').attr('stroke-width',1.2);
+    [[so.m23,so.s23,G23],[so.m25,so.s25,B25]].forEach(a=>svg.append('circle').attr('cx',x(a[0])).attr('cy',y(a[1])).attr('r',6).attr('fill',a[2]).attr('stroke','#1B1F2A').attr('stroke-width',2));
+    const tl=so.t.length>30?so.t.slice(0,29)+'…':so.t;const px=x(so.m25),right=px<W*0.6;
+    svg.append('text').attr('class','tl').attr('x',px+(right?10:-10)).attr('y',y(so.s25)-9).attr('text-anchor',right?'start':'end').style('paint-order','stroke').style('stroke','#EBEBEB').style('stroke-width',3).text(tl)}
+  // hit layer (2025 position)
+  svg.append('g').selectAll('circle').data(P.filter(match)).enter().append('circle').attr('class','hit').attr('cx',d=>x(d.m25)).attr('cy',d=>y(d.s25)).attr('r',8).on('pointermove',(ev,d)=>showTip(ev,d)).on('pointerleave',hideTip).on('click',(ev,d)=>{hideTip();select(d.c,true)});
+  // legend
+  const L=[['2023 estimates',G23,'dot'],['2023 smooth curve (loess)',G23d,'line'],['2025 estimates',B25,'dot'],['2025 smooth curve (loess)',B25d,'line']];
+  const lg=svg.append('g').attr('transform',`translate(${W-m.r-196},${m.t+8})`);
+  lg.append('rect').attr('x',-8).attr('y',-6).attr('width',200).attr('height',84).attr('rx',4).attr('fill','#fff').attr('opacity',0.92);
+  L.forEach((a,i)=>{const yy=i*19+8;if(a[2]==='dot')lg.append('circle').attr('cx',8).attr('cy',yy).attr('r',4).attr('fill',a[1]);else lg.append('line').attr('x1',0).attr('x2',16).attr('y1',yy).attr('y2',yy).attr('stroke',a[1]).attr('stroke-width',2.4);lg.append('text').attr('x',24).attr('y',yy+4).text(a[0])});
+  $('#scale').innerHTML='';
+  $('#note').textContent='Reproduces Figure 17 of the working paper: each occupation appears twice, once with its 2023 scores (green) and once with its 2025 scores (blue). Curves are local regressions (loess, span 0.75) fitted to all 427 occupations; the grey band is an approximate 95% interval. Filters dim the dots but do not change the curves. Select an occupation to see how far it moved.'}
 
 /* ---------- LIST ---------- */
 function renderList(){
@@ -457,14 +575,14 @@ function syncUI(){
   document.querySelectorAll('#colorSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===st.color));
   document.querySelectorAll('#sizeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===st.size));
   document.querySelectorAll('#lvlSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===st.level));
-  const six=st.level==='6';$('#moveTab').hidden=six;document.querySelector('[data-c=chg]').hidden=six;$('#inclTasks').disabled=six;$('#inclLbl').textContent=six?'Task text search works at the ISCO-08 level':'Also search task text';
-  $('#colorGrp').hidden=st.view==='list';$('#sizeGrp').hidden=st.view!=='map'}
+  const six=st.level==='6';$('#moveTab').hidden=six;$('#figTab').hidden=six;document.querySelector('[data-c=chg]').hidden=six;$('#inclTasks').disabled=six;$('#inclLbl').textContent=six?'Task text search works at the ISCO-08 level':'Also search task text';
+  $('#colorGrp').hidden=st.view==='list'||st.view==='fig17';$('#sizeGrp').hidden=st.view!=='map'}
 function render(){readTheme();syncUI();updateChips();hideTip();
-  if(st.view==='map')renderMap();else if(st.view==='move')renderMove();else renderList();}
+  if(st.view==='map')renderMap();else if(st.view==='spread')renderSpread();else if(st.view==='move')renderMove();else if(st.view==='fig17')renderFig17();else renderList();}
 function wire(){
   $('#q').oninput=e=>{st.q=e.target.value;render()};
   $('#inclTasks').onchange=e=>{st.tasks=e.target.checked;render()};
-  document.querySelectorAll('#lvlSeg button').forEach(b=>b.onclick=()=>{st.level=b.dataset.l;st.zoom=[];if(st.level==='6'&&st.view==='move')st.view='map';if(st.level==='6'&&st.color==='chg')st.color='grad';render()});
+  document.querySelectorAll('#lvlSeg button').forEach(b=>b.onclick=()=>{st.level=b.dataset.l;st.zoom=[];if(st.level==='6'&&(st.view==='move'||st.view==='fig17'))st.view='map';if(st.level==='6'&&st.color==='chg')st.color='grad';render()});
   $('#g1').onchange=e=>{st.g1=e.target.value;st.zoom=[];render()};
   document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>{st.view=b.dataset.v;render()});
   document.querySelectorAll('#colorSeg button').forEach(b=>b.onclick=()=>{st.color=b.dataset.c;render()});
@@ -480,7 +598,7 @@ Promise.all([fetch('data.json').then(r=>r.json()),fetch('o6.json').then(r=>r.jso
   occ6=o6.l.map(r=>{const c=r[0],c2=String(c).slice(0,2),g1=+String(c)[0];const o={six:true,c,t:r[1],tp:r[2],c4:r[3],m25:r[4],s25:r[5],gi:r[6],nt:r[7],dm:null,g1,c2,_s:(c+' '+r[1]+' '+r[2]).toLowerCase()};
     o.grp=[[g1,g1+' '+D.g1[g1]],[c2,c2+' '+(o6.n2[c2]||'')],[r[3],r[3]+' '+(o6.n4[r[3]]||'')]];byCode6[c]=o;return o});
   $('#g1').innerHTML='<option value="all">All major groups</option>'+Object.keys(D.g1).map(k=>`<option value="${k}">${k} ${esc(D.g1[k])}</option>`).join('');
-  $('#defs').innerHTML=GR.map(g=>`<dt>${g.n}</dt><dd>${esc(g.d)}</dd>`).join('');
+  $('#cov').innerHTML=[[occ.length,'ISCO-08 occupations'],[occ.reduce((t,o)=>t+o.k.length,0),'ISCO-08 tasks scored'],[occ6.length,'Polish occupations (KZiS)'],[occ6.reduce((t,o)=>t+o.nt,0),'Polish tasks scored']].map(([v,l])=>`<div class="cov-card"><b>${v.toLocaleString('en')}</b><span>${l}</span></div>`).join('');
   st.sel=4132;wire();render();renderPanel();
 }).catch(()=>{$('#view').innerHTML='<div class="empty">The data file could not be loaded. Reload the page to try again.</div>'});
 })();
