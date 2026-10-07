@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Exposure Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: filter bar over a main view (map / movers / list) with a sticky occupation panel on the right; stacks on phones.
+   Colour: one indigo ramp from "not exposed" (pale grey-blue) to "gradient 4" (deep indigo); dark mode runs the other way (brighter = more exposed). */
+:root{
+  --bg:#F5F6F9; --surface:#FFFFFF; --ink:#13171F; --ink2:#47505F; --muted:#76808F; --line:#DCE0E7; --accent:#2A3EA3; --hover:#EDEFF4;
+  --r0:#E4E7EE; --r1:#C9D8F0; --r2:#A2B9E6; --r3:#7396D8; --r4:#4468BF; --r5:#1D2E82;
+  --dn:#D2691E; --mid:#ECEEF2; --up:#2F4BB5;
+  --f-display:'Bricolage Grotesque','IBM Plex Sans',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1116; --surface:#161A21; --ink:#E8ECF2; --ink2:#AFB7C5; --muted:#7F8899; --line:#29303A; --accent:#8FA8FF; --hover:#1E232C;
+  --r0:#262C37; --r1:#31456B; --r2:#3E5FA0; --r3:#5A82D0; --r4:#8AAAF0; --r5:#C4D5FF;
+  --dn:#E58A4B; --mid:#2A303A; --up:#8AAAF0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1116; --surface:#161A21; --ink:#E8ECF2; --ink2:#AFB7C5; --muted:#7F8899; --line:#29303A; --accent:#8FA8FF; --hover:#1E232C;
+  --r0:#262C37; --r1:#31456B; --r2:#3E5FA0; --r3:#5A82D0; --r4:#8AAAF0; --r5:#C4D5FF;
+  --dn:#E58A4B; --mid:#2A303A; --up:#8AAAF0; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 32px}
+.wrap{max-width:1500px;margin:0 auto}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px;margin-bottom:16px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,34px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--ink2);margin:6px 0 0;max-width:62ch}
+.stats{color:var(--muted);font-size:13px}
+.stats b{color:var(--ink);font-weight:600}
+
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:10px}
+.search{flex:1 1 240px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0 10px}
+.search input{flex:1;min-width:0;border:0;background:transparent;padding:9px 0;outline:none}
+.search:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.search svg{flex:none;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;white-space:nowrap}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:8px 12px;color:var(--ink2);white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--ink);color:var(--bg);font-weight:500}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:-6px}
+.tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.tools .grp{display:flex;align-items:center;gap:8px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px 5px 7px;font-size:13px;color:var(--ink)}
+.chip i{width:14px;height:14px;border-radius:4px;display:block;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+.chip .n{color:var(--muted);font-family:var(--f-mono);font-size:12px}
+.chip[aria-pressed="false"]{opacity:.45}
+.chip[aria-pressed="false"] i{background:transparent!important}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:1040px){.layout{grid-template-columns:minmax(0,1fr) 430px}.panel{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.main{padding:12px;min-width:0}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;min-height:28px;margin-bottom:8px;font-size:13px;color:var(--ink2)}
+.crumbs button{border:0;background:transparent;padding:2px 4px;border-radius:4px;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.crumbs .cur{font-weight:500;color:var(--ink)}
+.note{color:var(--muted);font-size:12px;margin:8px 2px 0}
+
+/* treemap */
+.tm{position:relative;width:100%;overflow:hidden;border-radius:8px;background:var(--surface)}
+.gh{position:absolute;display:flex;align-items:center;gap:6px;padding:0 6px;font-size:12px;font-weight:600;color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border:0;background:transparent;text-align:left;cursor:zoom-in}
+.gh:hover{color:var(--accent)}
+.cell{position:absolute;overflow:hidden;padding:4px 5px;border-radius:3px;border:0;text-align:left;line-height:1.2;font-size:11.5px;transition:opacity .15s}
+.cell .t{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;font-weight:500}
+.cell .c{font-family:var(--f-mono);font-size:10px;opacity:.75;display:block}
+.cell .v{position:absolute;left:5px;bottom:3px;font-family:var(--f-mono);font-size:11px;opacity:.9}
+.cell:hover{filter:brightness(1.06)}
+.cell.sel{outline:2.5px solid var(--ink);outline-offset:-2.5px;z-index:3}
+.cell.dim{opacity:.16}
+.scale{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--ink2);flex-wrap:wrap}
+.scale .ramp{height:10px;width:min(220px,50vw);border-radius:5px}
+
+/* scatter */
+.sc svg{display:block;width:100%;height:auto;overflow:visible}
+.sc text{fill:var(--ink2);font-size:11px;font-family:var(--f-body)}
+.sc .ax text{font-family:var(--f-mono)}
+.sc .gl{stroke:var(--line);stroke-width:1}
+.sc .tl{font-size:11px;fill:var(--ink)}
+.sc circle.hit{fill:transparent;cursor:pointer}
+
+/* list */
+.tw{overflow:auto;max-height:640px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th{position:sticky;top:0;background:var(--surface);text-align:left;font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th button{border:0;background:transparent;text-transform:inherit;letter-spacing:inherit;color:inherit;padding:0;font-weight:inherit}
+th button:hover{color:var(--ink)}
+td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}
+tr.row:hover td{background:var(--hover)}
+tr.row.sel td{background:var(--hover);box-shadow:inset 0 0 0 0 transparent}
+tr.row.sel td:first-child{box-shadow:inset 3px 0 0 var(--ink)}
+td.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:1px 9px 1px 5px;font-size:12px;white-space:nowrap}
+.pill i{width:11px;height:11px;border-radius:3px;display:block;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+.mb{display:inline-block;width:56px;height:6px;border-radius:3px;background:var(--hover);vertical-align:middle;margin-right:6px;overflow:hidden}
+.mb b{display:block;height:100%;background:var(--ink2)}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+
+/* panel */
+.panel{padding:16px}
+.ph .path{font-size:12px;color:var(--muted)}
+.ph h2{font-family:var(--f-display);font-weight:700;font-size:24px;line-height:1.15;margin:4px 0 8px;text-wrap:balance}
+.ph .code{font-family:var(--f-mono);font-size:13px;color:var(--ink2)}
+.kp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.kp div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.kp .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kp .big{font-family:var(--f-mono);font-size:22px;font-weight:500;line-height:1.2}
+.kp .sm{font-size:12px;color:var(--ink2)}
+.read{color:var(--ink2);margin:0 0 14px;font-size:13px}
+.ptitle{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ptitle .seg button{padding:4px 9px;font-size:12px}
+.strip svg{display:block;width:100%;height:auto;overflow:visible}
+.strip text{fill:var(--muted);font-size:10px;font-family:var(--f-mono)}
+.tasks{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.tasks details{border-bottom:1px solid var(--line)}
+.tasks summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 78px 40px;gap:4px 10px;align-items:center;padding:8px 2px}
+.tasks summary::-webkit-details-marker{display:none}
+.tasks summary:hover{background:var(--hover)}
+.tt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:13px}
+details[open] .tt{-webkit-line-clamp:unset}
+.trk{height:8px;border-radius:4px;background:var(--hover);position:relative}
+.trk b{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.trk u{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px solid var(--ink);opacity:.55;text-decoration:none}
+.tsc{font-family:var(--f-mono);font-size:13px;text-align:right}
+.td{padding:2px 2px 12px;font-size:12.5px;color:var(--ink2)}
+.td .sc3{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px;font-family:var(--f-mono);font-size:12px;color:var(--ink)}
+.td h4{margin:10px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.td p{margin:0;max-width:62ch}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:6px 0}
+.leg span{display:inline-flex;align-items:center;gap:6px}
+.leg i{display:inline-block;width:14px;height:0;border-top:8px solid var(--ink2);border-radius:4px}
+.leg u{display:inline-block;width:0;height:12px;border-left:2px solid var(--ink);opacity:.55;text-decoration:none}
+
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:12.5px;max-width:280px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.tip b{font-weight:600}
+.tip .m{font-family:var(--f-mono);font-size:12px;opacity:.9}
+.tip[hidden]{display:none}
+
+.kids{display:flex;flex-direction:column;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.kid{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:7px 9px;font-size:13px;width:100%}
+.kid:last-child{border-bottom:0}.kid:hover{background:var(--hover)}
+.kid i{width:12px;height:12px;border-radius:3px;display:block;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+.kid .kt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lnk{border:0;background:transparent;padding:2px 0;color:var(--accent);text-decoration:underline;text-underline-offset:2px;font-size:12px;text-transform:none;letter-spacing:0;text-align:left}
+.nav{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted)}
+.ph .pl{color:var(--ink2);font-size:14px;margin:-2px 0 8px;font-style:italic}
+footer{margin-top:20px;color:var(--muted);font-size:12.5px;max-width:92ch}
+footer a{color:var(--accent)}
+footer details{margin-top:8px}
+footer summary{cursor:pointer;color:var(--ink2)}
+footer dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:8px 0 0}
+footer dt{font-weight:500;color:var(--ink2);white-space:nowrap}
+footer dd{margin:0}
+@media (max-width:560px){.kp{grid-template-columns:repeat(3,minmax(0,1fr))}.kp .big{font-size:18px}.ph h2{font-size:21px}.seg button{padding:8px 9px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>AI Exposure Explorer</h1>
+      <p class="sub">Task-level exposure to generative AI for 427 occupations in the ISCO-08 classification. Browse the map, compare 2023 with 2025, or open an occupation to see every task and the reasoning behind its score. Switch the level to Poland 6-digit to see the 2,541 detailed occupations behind the ISCO-08 scores.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="bar">
+    <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
+      <input id="q" type="search" placeholder="Search occupation or ISCO code, e.g. translators or 2643" autocomplete="off" aria-label="Search occupations"></label>
+    <label class="chk"><input type="checkbox" id="inclTasks"> <span id="inclLbl">Also search task text</span></label>
+    <select id="g1" aria-label="Filter by ISCO major group"></select>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Filter by exposure category"></div>
+
+  <div class="layout">
+    <section class="card main" aria-label="Occupation views">
+      <div class="bar" style="margin-bottom:6px">
+        <div class="seg" role="tablist" id="views">
+          <button role="tab" data-v="map" aria-selected="true">Map</button>
+          <button role="tab" data-v="move" id="moveTab" aria-selected="false">2023 vs 2025</button>
+          <button role="tab" data-v="list" aria-selected="false">List</button>
+        </div>
+        <div class="tools">
+          <div class="grp"><span class="lbl">Level</span><div class="seg" id="lvlSeg"><button data-l="4" aria-pressed="true">ISCO-08 4-digit</button><button data-l="6" aria-pressed="false">Poland 6-digit</button></div></div>
+          <div class="grp" id="colorGrp"><span class="lbl">Colour</span>
+            <div class="seg" id="colorSeg">
+              <button data-c="grad" aria-pressed="true">Category</button>
+              <button data-c="mean" aria-pressed="false">Mean score</button>
+              <button data-c="chg" aria-pressed="false">Change</button>
+            </div></div>
+          <div class="grp" id="sizeGrp"><span class="lbl">Box size</span>
+            <div class="seg" id="sizeSeg">
+              <button data-s="eq" aria-pressed="true">Equal</button>
+              <button data-s="tasks" aria-pressed="false">Tasks</button>
+            </div></div>
+        </div>
+      </div>
+      <div id="view"></div>
+      <div class="scale" id="scale"></div>
+      <p class="note" id="note"></p>
+    </section>
+
+    <aside class="card panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <footer>
+    <p>Scores run from 0 (the task cannot be automated with generative AI) to 1 (it could be fully automated). An occupation's score is the mean of its task scores; its category depends on that mean and on how much the tasks differ from one another.</p>
+    <details><summary>What the categories mean</summary>
+      <dl id="defs"></dl></details>
+    <p>Source: Gmyrek, Berg, Kamiński, Konopczyński, Ładna, Nafradi, Rosłaniec and Troszyński (2025), <a href="https://doi.org/10.54394/HETP0387" target="_blank" rel="noopener">Generative AI and Jobs: A Refined Global Index of Occupational Exposure</a>, ILO Working Paper 140. Data: <a href="https://github.com/pgmyrek/2025_GenAI_scores_ISCO08" target="_blank" rel="noopener">github.com/pgmyrek/2025_GenAI_scores_ISCO08</a>. Polish 6-digit data: <a href="https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations" target="_blank" rel="noopener">github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations</a>, the Polish national classification of occupations (KZiS) scored with the same method; see also the <a href="https://www.nask.pl/indeks" target="_blank" rel="noopener">ILO-NASK index for Poland</a>. Prototype for review.</p>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const f2=d3.format('.2f'), fd=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+const GR=[
+ {k:'Not Exposed',n:'Not exposed',d:'Most tasks are barely affected; task scores are low and similar to one another.'},
+ {k:'Minimal Exposure',n:'Minimal',d:'Low exposure overall. Some tasks have moderate potential, but the occupation as a whole stays limited.'},
+ {k:'Exposed: Gradient 1',n:'Gradient 1',d:'Low average, but tasks differ a lot: some are highly exposed even though the occupation mostly relies on tasks that are not.'},
+ {k:'Exposed: Gradient 2',n:'Gradient 2',d:'Moderate average (0.4 to 0.5) with high variation: a mix of exposed and unaffected tasks, so the impact is uneven.'},
+ {k:'Exposed: Gradient 3',n:'Gradient 3',d:'Above-moderate average (0.5 to 0.6). Many tasks have clear potential to be done with generative AI.'},
+ {k:'Exposed: Gradient 4',n:'Gradient 4',d:'High and consistent exposure (mean of 0.6 or more) across tasks. The highest potential for transformation.'}];
+const GI={};GR.forEach((g,i)=>GI[g.k]=i);
+const st={view:'map',color:'grad',size:'eq',q:'',tasks:false,grads:new Set(GR.map((_,i)=>i)),g1:'all',sel:null,zoom:[],sort:{k:'m25',d:-1},tsort:'high'};
+let D=null,O6=null,occ=[],occ6=[],byCode={},byCode6={},JC={},KC={};st.level='4';
+const pool=()=>st.level==='6'?occ6:occ;
+
+/* ---------- theme-aware colours ---------- */
+function cv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+let C={};
+function readTheme(){C={ramp:[0,1,2,3,4,5].map(i=>cv('--r'+i)),dn:cv('--dn'),mid:cv('--mid'),up:cv('--up'),surface:cv('--surface')};
+  C.mean=d3.scaleLinear().domain([0.1,0.7]).range([C.ramp[0],C.ramp[5]]).interpolate(d3.interpolateRgb).clamp(true);
+  C.chg=v=>{const t=Math.max(-1,Math.min(1,v/0.12));return t<0?d3.interpolateRgb(C.mid,C.dn)(-t):d3.interpolateRgb(C.mid,C.up)(t)}}
+function ink(bg){const c=d3.color(bg);if(!c)return '#111';const l=(0.2126*c.r+0.7152*c.g+0.0722*c.b)/255;return l>0.56?'#10141b':'#ffffff'}
+function colorOf(o){return st.color==='grad'?C.ramp[o.gi]:st.color==='mean'?C.mean(o.m25):C.chg(o.dm)}
+
+/* ---------- filtering ---------- */
+function match(o){
+  if(!st.grads.has(o.gi))return false;
+  if(st.g1!=='all'&&String(o.g1)!==st.g1)return false;
+  const q=st.q.trim().toLowerCase();
+  if(q){ if(!(o._s.includes(q)||(st.tasks&&!o.six&&o._t.includes(q))))return false }
+  return true}
+const filtered=()=>pool().filter(match);
+const anyFilter=()=>st.q.trim()||st.g1!=='all'||st.grads.size<6;
+
+/* ---------- tooltip ---------- */
+const tip=$('#tip');
+function showTip(e,o){
+  tip.innerHTML=`<b>${esc(o.t)}</b><div class="m">${o.c} · ${GR[o.gi].n}</div><div class="m">2025 mean ${f2(o.m25)}${o.dm!=null?' \u00b7 vs 2023 '+fd(o.dm):' \u00b7 '+o.nt+' tasks'}</div>${o.tp?'<div class="m">'+esc(o.tp)+'</div>':''}`;
+  tip.hidden=false;const w=tip.offsetWidth,h=tip.offsetHeight;
+  let x=e.clientX+14,y=e.clientY+14;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;
+  tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
+const hideTip=()=>tip.hidden=true;
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- selection ---------- */
+function select(code,scroll){st.sel=code;paintSel();renderPanel();
+  if(scroll&&innerWidth<1040){const p=$('#panel');p.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'})}}
+function paintSel(){
+  document.querySelectorAll('[data-code]').forEach(el=>el.classList.toggle('sel',el.dataset.code==st.sel));
+  document.querySelectorAll('circle.pt').forEach(c=>{const on=c.dataset.code==st.sel;c.setAttribute('stroke',on?'var(--ink)':C.surface);c.setAttribute('stroke-width',on?2.5:1.5);if(on)c.parentNode.parentNode.appendChild(c.parentNode)})}
+
+/* ---------- MAP ---------- */
+function tree(){
+  const root={name:'All occupations',key:[],children:[]};const idx=new Map();
+  pool().forEach(o=>{let par=root;
+    o.grp.forEach(([k,n])=>{const key=par.key.concat(String(k));const kk=key.join('/');let nd=idx.get(kk);if(!nd){nd={name:n,key,children:[]};idx.set(kk,nd);par.children.push(nd)}par=nd});
+    par.children.push({o,key:par.key.concat(String(o.c))})});
+  return root}
+function renderMap(){
+  const root=tree();let node=root;
+  for(const k of st.zoom){const nx=(node.children||[]).find(c=>c.key[c.key.length-1]===k);if(!nx)break;node=nx}
+  const host=$('#view');host.innerHTML='';
+  // crumbs
+  const cr=document.createElement('div');cr.className='crumbs';
+  let cur=root;const trail=[{n:root,k:[]}];
+  st.zoom.forEach((k,i)=>{const nx=(cur.children||[]).find(c=>c.key[c.key.length-1]===k);if(nx){cur=nx;trail.push({n:nx,k:st.zoom.slice(0,i+1)})}});
+  trail.forEach((t,i)=>{if(i<trail.length-1){const b=document.createElement('button');b.textContent=t.n.name;b.onclick=()=>{st.zoom=t.k;renderMap()};cr.appendChild(b);cr.appendChild(document.createTextNode('›'))}else{const s=document.createElement('span');s.className='cur';s.textContent=t.n.name;cr.appendChild(s)}});
+  if(trail.length===1){const s=document.createElement('span');s.style.color='var(--muted)';s.textContent='Select a group heading to zoom in, or an occupation to read its tasks.';cr.appendChild(s)}
+  host.appendChild(cr);
+  const W=host.clientWidth||600;const H=W<600?Math.round(W*1.4):Math.round(Math.max(420,Math.min(W*0.95,780)));
+  const box=document.createElement('div');box.className='tm';box.style.height=H+'px';host.appendChild(box);
+  const val=d=>d.children?0:(st.size==='tasks'?(d.o.six?d.o.nt:d.o.k.length):1);
+  const h=d3.hierarchy(node,d=>d.children).sum(val);
+  d3.treemap().size([W,H]).paddingInner(st.level==='6'?1:2).paddingOuter(st.level==='6'?1:2).paddingTop(d=>d.depth===1&&d.height>=1?20:(st.level==='6'?1:2)).tile(d3.treemapSquarify.ratio(1.2))(h);
+  const frag=document.createDocumentFragment();
+  h.descendants().forEach(d=>{
+    const w=d.x1-d.x0,hh=d.y1-d.y0;if(d.depth===0)return;
+    if(d.data.o===undefined){
+      if(d.depth===1&&d.height>=1){const b=document.createElement('button');b.className='gh';b.style.cssText=`left:${d.x0}px;top:${d.y0}px;width:${w}px;height:20px`;b.textContent=d.data.name;b.title='Zoom in: '+d.data.name;b.onclick=()=>{st.zoom=d.data.key;renderMap()};frag.appendChild(b)}
+      return}
+    const o=d.data.o,el=document.createElement('div');el.className='cell';el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label',`${o.t}, ${GR[o.gi].n}, mean ${f2(o.m25)}`);
+    el.dataset.code=o.c;const bg=colorOf(o);el.style.cssText=`left:${d.x0}px;top:${d.y0}px;width:${w}px;height:${hh}px;background:${bg};color:${ink(bg)}`;
+    if(w>58&&hh>30){const lines=Math.max(1,Math.min(5,Math.floor((hh-(hh>48?30:12))/13)));el.innerHTML=`<span class="t" style="-webkit-line-clamp:${lines}">${esc(o.t)}</span>`+(hh>50&&w>66?`<span class="c">${o.c}</span>`:'')+(hh>64&&w>76?`<span class="v">${f2(o.m25)}</span>`:'')}
+    if(!match(o))el.classList.add('dim');
+    if(o.c==st.sel)el.classList.add('sel');
+    el.onpointermove=e=>showTip(e,o);el.onpointerleave=hideTip;
+    el.onclick=()=>{hideTip();select(o.c,true)};el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(o.c,true)}};
+    frag.appendChild(el)});
+  box.appendChild(frag);
+  renderScale();
+  $('#note').textContent=st.level==='6'?'Poland\u2019s national classification (KZiS) lists 2,541 detailed occupations, each mapped to an ISCO-08 group. Scores come from the same scoring method as the ISCO-08 index. Some national groups have no ISCO-08 task list and appear only here. Zoom in from the group headings to read labels. Box size is not employment.':st.size==='eq'?'Every occupation has the same box size, so area shows how many occupations a group has, not how many people work in it. Employment weights from ILO labour force data are the next step.':'Box size follows the number of tasks listed for the occupation in ISCO-08. It is not employment.'}
+function renderScale(){
+  const s=$('#scale');
+  if(st.view!=='map'&&st.view!=='move'){s.innerHTML='';return}
+  if(st.color==='grad'){s.innerHTML='<span>Category</span>'+GR.map((g,i)=>`<span style="display:inline-flex;align-items:center;gap:5px"><i style="width:12px;height:12px;border-radius:3px;background:${C.ramp[i]};display:inline-block;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)"></i>${g.n}</span>`).join('');return}
+  if(st.color==='mean'){s.innerHTML=`<span class="mono">0.10</span><span class="ramp" style="background:linear-gradient(90deg,${C.ramp[0]},${C.ramp[5]})"></span><span class="mono">0.70</span><span>2025 mean score</span>`;return}
+  s.innerHTML=`<span class="mono">−0.12 or lower</span><span class="ramp" style="background:linear-gradient(90deg,${C.dn},${C.mid},${C.up})"></span><span class="mono">+0.12 or higher</span><span>Change in mean score, 2023 to 2025</span>`}
+
+/* ---------- MOVERS (scatter) ---------- */
+function renderMove(){
+  const host=$('#view');host.innerHTML='<div class="sc"></div>';const el=host.firstChild;
+  const W=host.clientWidth||600,H=Math.round(Math.max(340,Math.min(W*0.82,620)));const m={l:44,r:14,t:12,b:40};
+  const x=d3.scaleLinear([0,0.8],[m.l,W-m.r]),y=d3.scaleLinear([0,0.8],[H-m.b,m.t]);
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Scatter of each occupation: mean score in 2023 on the horizontal axis, 2025 on the vertical axis');
+  const ticks=[0,0.2,0.4,0.6,0.8];
+  const ax=svg.append('g').attr('class','ax');
+  ticks.forEach(t=>{ax.append('line').attr('class','gl').attr('x1',m.l).attr('x2',W-m.r).attr('y1',y(t)).attr('y2',y(t));
+    ax.append('line').attr('class','gl').attr('y1',m.t).attr('y2',H-m.b).attr('x1',x(t)).attr('x2',x(t));
+    ax.append('text').attr('x',m.l-8).attr('y',y(t)+4).attr('text-anchor','end').text(t.toFixed(1));
+    ax.append('text').attr('x',x(t)).attr('y',H-m.b+16).attr('text-anchor','middle').text(t.toFixed(1))});
+  svg.append('line').attr('x1',x(0)).attr('y1',y(0)).attr('x2',x(0.8)).attr('y2',y(0.8)).attr('stroke',cv('--muted')).attr('stroke-dasharray','4 4');
+  svg.append('text').attr('x',x(0.8)-6).attr('y',y(0.8)+14).attr('text-anchor','end').text('no change');
+  svg.append('text').attr('x',(m.l+W-m.r)/2).attr('y',H-4).attr('text-anchor','middle').text('Mean task score, 2023 version');
+  svg.append('text').attr('transform',`translate(12,${(m.t+H-m.b)/2}) rotate(-90)`).attr('text-anchor','middle').text('Mean task score, 2025 version');
+  const g=svg.append('g');
+  const pts=occ.slice().sort((a,b)=>(match(b)?0:1)-(match(a)?0:1)).reverse();
+  const e=g.selectAll('g.p').data(pts).enter().append('g').attr('class','p').attr('opacity',o=>match(o)?1:0.14);
+  e.append('circle').attr('class','pt').attr('data-code',o=>o.c).attr('cx',o=>x(o.m23)).attr('cy',o=>y(o.m25)).attr('r',4.6).attr('fill',o=>colorOf(o)).attr('stroke',C.surface).attr('stroke-width',1.5);
+  e.append('circle').attr('class','hit').attr('cx',o=>x(o.m23)).attr('cy',o=>y(o.m25)).attr('r',9)
+    .on('pointermove',(ev,o)=>showTip(ev,o)).on('pointerleave',hideTip).on('click',(ev,o)=>{hideTip();select(o.c,true)});
+  // direct labels for the biggest movers among visible points
+  const vis=occ.filter(match).sort((a,b)=>Math.abs(b.dm)-Math.abs(a.dm)).slice(0,anyFilter()?6:7);const placed=[];
+  vis.forEach(o=>{const t=o.t.length>26?o.t.slice(0,25)+'…':o.t;const w=t.length*5.6+4;const px=x(o.m23),py=y(o.m25);
+    for(const [dx,dy,anc] of [[8,-6,'start'],[-8,-6,'end'],[8,14,'start'],[-8,14,'end']]){
+      const bx=anc==='start'?px+dx:px+dx-w,by=py+dy-10;
+      if(bx<m.l-2||bx+w>W-2||by<0||by+13>H-m.b)continue;
+      if(placed.some(p=>bx<p.x+p.w&&bx+w>p.x&&by<p.y+13&&by+13>p.y))continue;
+      placed.push({x:bx,y:by,w});svg.append('text').attr('class','tl').attr('x',px+dx).attr('y',py+dy).attr('text-anchor',anc).style('paint-order','stroke').style('stroke',C.surface).style('stroke-width',3).text(t);break}});
+  paintSel();renderScale();
+  $('#note').textContent='Each dot is one occupation. Dots above the dashed line scored higher in 2025 than in 2023. Hover or tap a dot to identify it; select to read its tasks. The 2023 and 2025 scores come from different scoring rounds, so small shifts are expected.'}
+
+/* ---------- LIST ---------- */
+function renderList(){
+  const host=$('#view');const rows=filtered();
+  const k=st.sort.k,d=st.sort.d;
+  const val={nt:o=>o.nt||0,c:o=>o.c,t:o=>o.t.toLowerCase(),m25:o=>o.m25,gi:o=>o.gi,dm:o=>o.dm,g1:o=>o.g1};
+  rows.sort((a,b)=>{const A=val[k](a),B=val[k](b);return (A>B?1:A<B?-1:a.c-b.c)*d});
+  const th=(key,label,cls)=>`<th${cls?` class="${cls}"`:''} aria-sort="${st.sort.k===key?(st.sort.d>0?'ascending':'descending'):'none'}"><button data-sk="${key}">${label}${st.sort.k===key?(st.sort.d>0?' ↑':' ↓'):''}</button></th>`;
+  host.innerHTML=`<div class="crumbs"><span class="cur">${rows.length} of ${pool().length} occupations</span></div><div class="tw"><table><thead><tr>${th('c','Code')}${th('t','Occupation')}${th('g1','Major group')}${th('m25','2025 mean','num')}${th('gi','Category')}${st.level==='6'?th('nt','Tasks','num'):th('dm','vs 2023','num')}</tr></thead><tbody>`+
+   rows.map(o=>`<tr class="row${o.c==st.sel?' sel':''}" data-code="${o.c}" tabindex="0"><td class="mono">${o.c}</td><td>${esc(o.t)}${o.tp?`<div style="color:var(--muted);font-size:12px">${esc(o.tp)}</div>`:''}</td><td>${o.g1} ${esc(D.g1[o.g1])}</td><td class="num"><span class="mb"><b style="width:${Math.round(o.m25/0.8*100)}%"></b></span>${f2(o.m25)}</td><td><span class="pill"><i style="background:${C.ramp[o.gi]}"></i>${GR[o.gi].n}</span></td><td class="num">${st.level==='6'?o.nt:fd(o.dm)}</td></tr>`).join('')+
+   `</tbody></table></div>`+(rows.length?'':'<div class="empty">No occupation matches these filters.</div>');
+  host.querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>{const kk=b.dataset.sk;st.sort=st.sort.k===kk?{k:kk,d:-st.sort.d}:{k:kk,d:(kk==='t'||kk==='c'||kk==='g1')?1:-1};renderList()});
+  host.querySelectorAll('tr.row').forEach(r=>{r.onclick=()=>select(+r.dataset.code,true);r.onkeydown=e=>{if(e.key==='Enter'){select(+r.dataset.code,true)}}});
+  $('#scale').innerHTML='';$('#note').textContent='Click a column heading to sort. Filters above narrow this list.'}
+
+/* ---------- PANEL ---------- */
+async function loadJ(g){if(JC[g])return JC[g];try{const r=await fetch(`j${g}.json`);if(!r.ok)throw 0;JC[g]=await r.json()}catch(e){JC[g]={}}return JC[g]}
+function renderPanel(){
+  const o=byCode[st.sel]||byCode6[st.sel],p=$('#panel');if(!o){p.innerHTML='<div class="empty">Select an occupation to see its tasks.</div>';return}
+  if(o.six)return renderPanel6(o);
+  const gi=GR[o.gi];const kids=occ6.filter(x=>x.c4===o.c).sort((a,b)=>b.m25-a.m25);
+  p.innerHTML=`<div class="ph"><div class="path">${o.g1} ${esc(D.g1[o.g1])} › ${esc(o.c2+' '+o.n2)}</div><h2>${esc(o.t)}</h2>
+    <span class="code">ISCO-08 ${o.c}</span> &nbsp; <span class="pill"><i style="background:${C.ramp[o.gi]}"></i>${gi.n}, 2025</span></div>
+   <div class="kp"><div><div class="k">2025 mean</div><div class="big">${f2(o.m25)}</div><div class="sm">spread ±${f2(o.s25)}</div></div>
+     <div><div class="k">2023 mean</div><div class="big">${f2(o.m23)}</div><div class="sm">spread ±${f2(o.s23)}</div></div>
+     <div><div class="k">Change</div><div class="big">${fd(o.dm)}</div><div class="sm">2023 label: ${esc(o.p23.replace('Uknown','Unknown'))}</div></div></div>
+   <p class="read">${esc(gi.d)}</p>
+   <div class="ptitle"><span>Where the ${o.k.length} tasks fall</span></div>
+   <div class="strip" id="strip"></div>
+   ${kids.length?`<div class="ptitle"><span>Polish 6-digit occupations (${kids.length})</span><button class="lnk" id="showKids">Show on map</button></div><div class="kids">${kids.map(k=>`<button class="kid" data-c="${k.c}"><i style="background:${C.ramp[k.gi]}"></i><span class="kt">${esc(k.t)}</span><span class="mono">${f2(k.m25)}</span></button>`).join('')}</div>`:''}
+   <div class="ptitle"><span>Tasks</span><div class="seg" id="tsort"><button data-t="high" aria-pressed="${st.tsort==='high'}">Highest</button><button data-t="low" aria-pressed="${st.tsort==='low'}">Lowest</button><button data-t="src" aria-pressed="${st.tsort==='src'}">As listed</button></div></div>
+   <div class="leg"><span><i></i>2025 score</span><span><u></u>2023 score</span><span>Select a task for model scores and reasoning</span></div>
+   <ul class="tasks" id="tl"></ul>`;
+  drawStrip(o);drawTasks(o);
+  p.querySelectorAll('.kid').forEach(b=>b.onclick=()=>select(+b.dataset.c,false));
+  const sk=$('#showKids');if(sk)sk.onclick=()=>goSix(o);
+  p.querySelectorAll('#tsort button').forEach(b=>b.onclick=()=>{st.tsort=b.dataset.t;p.querySelectorAll('#tsort button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawTasks(o)});
+  p.scrollTop=0}
+function drawStrip(o){
+  const el=$('#strip');const W=el.clientWidth||380,H=92,m={l:8,r:8,t:6,b:20};const x=d3.scaleLinear([0,1],[m.l,W-m.r]);
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',`Distribution of the ${o.k.length} task scores for ${o.t}`);
+  const base=H-m.b;
+  svg.append('rect').attr('x',x(Math.max(0,o.m25-o.s25))).attr('width',x(Math.min(1,o.m25+o.s25))-x(Math.max(0,o.m25-o.s25))).attr('y',m.t).attr('height',base-m.t).attr('fill',C.ramp[2]).attr('opacity',0.28).attr('rx',4);
+  [0,0.25,0.5,0.75,1].forEach(t=>{svg.append('line').attr('x1',x(t)).attr('x2',x(t)).attr('y1',base).attr('y2',base+4).attr('stroke',cv('--muted'));svg.append('text').attr('x',x(t)).attr('y',H-4).attr('text-anchor',t===0?'start':t===1?'end':'middle').text(t.toFixed(t%1?2:1))});
+  svg.append('line').attr('x1',m.l).attr('x2',W-m.r).attr('y1',base).attr('y2',base).attr('stroke',cv('--line'));
+  const bins={};const r=3.6;const pts=o.k.map((t,i)=>{const b=Math.round(x(t[2])/(r*2));bins[b]=(bins[b]||0)+1;return{i,t,cx:x(t[2]),cy:base-r-1-(bins[b]-1)*(r*2-0.5)}});
+  svg.selectAll('circle.d').data(pts).enter().append('circle').attr('class','d').attr('cx',d=>d.cx).attr('cy',d=>Math.max(m.t+r,d.cy)).attr('r',r).attr('fill',d=>C.mean(d.t[2])).attr('stroke',C.surface).attr('stroke-width',1).append('title').text(d=>`${f2(d.t[2])}  ${d.t[0].slice(0,120)}`);
+  svg.append('line').attr('x1',x(o.m25)).attr('x2',x(o.m25)).attr('y1',m.t).attr('y2',base).attr('stroke',cv('--ink')).attr('stroke-width',2);
+  svg.append('text').attr('x',Math.min(W-m.r,x(o.m25)+4)).attr('y',m.t+9).attr('text-anchor',x(o.m25)>W-60?'end':'start').style('fill',cv('--ink')).text('mean '+f2(o.m25))}
+function drawTasks(o){
+  const ks=o.k.map((t,i)=>({t,i}));
+  if(st.tsort==='high')ks.sort((a,b)=>b.t[2]-a.t[2]||a.i-b.i);else if(st.tsort==='low')ks.sort((a,b)=>a.t[2]-b.t[2]||a.i-b.i);
+  const ul=$('#tl');
+  ul.innerHTML=ks.map(({t,i})=>`<li><details data-i="${i}"><summary><span class="tt">${esc(t[0])}</span><span class="trk"><b style="width:${t[2]*100}%;background:${C.mean(t[2])}"></b>${t[1]!=null?`<u style="left:${t[1]*100}%"></u>`:''}</span><span class="tsc">${f2(t[2])}</span></summary><div class="td"><div class="sc3">${o.six?`<span>2025: ${f2(t[2])}</span>`:`<span>2023: ${t[1]!=null?f2(t[1]):'n/a'}</span><span>GPT-4o: ${t[3]!=null?f2(t[3]):'n/a'}</span><span>Gemini: ${t[4]!=null?f2(t[4]):'n/a'}</span><span>2025: ${f2(t[2])}</span>`}</div><div class="jx">Loading reasoning\u2026</div></div></details></li>`).join('');
+  ul.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',async()=>{
+    if(!d.open||d.dataset.done)return;d.dataset.done=1;const i=+d.dataset.i;const box=d.querySelector('.jx');
+    if(o.six){const j=o.just[i];box.innerHTML=j?`<p style="margin-bottom:4px;color:var(--ink)">Score from the scoring assistant, which uses similar tasks scored by people and experts as examples.</p><h4>Reasoning (shortened)</h4><p>${esc(j)}</p>`:'Reasoning is not available for this task.';return}
+    const J=await loadJ(o.g1);const j=(J[o.c]||[])[i];const t=o.k[i];
+    const how=t[5]?'Final score settled by expert reconciliation.':'Final score is the average of the two model predictions.';
+    box.innerHTML=j&&(j[0]||j[1])?`<p style="margin-bottom:4px;color:var(--ink)">${how}</p><h4>GPT-4o reasoning</h4><p>${esc(j[0]||'Not available')}</p><h4>Gemini reasoning</h4><p>${esc(j[1]||'Not available')}</p>`:'Reasoning is not available for this task.'}))}
+async function loadK(g){if(KC[g])return KC[g];try{const r=await fetch(`k${g}.json`);if(!r.ok)throw 0;KC[g]=await r.json()}catch(e){KC[g]={}}return KC[g]}
+function goSix(o){st.level='6';st.view='map';if(st.color==='chg')st.color='grad';const c4=o.six?o.c4:o.c;st.zoom=[String(o.g1),String(c4).slice(0,2),String(c4)];render();$('#view').scrollIntoView({block:'start'})}
+function renderPanel6(o){
+  const p=$('#panel'),gi=GR[o.gi],par=byCode[o.c4];
+  p.innerHTML=`<div class="ph"><div class="path">${o.g1} ${esc(D.g1[o.g1])} \u203a ${esc(o.c2+' '+(O6.n2[o.c2]||''))} \u203a ${esc(o.c4+' '+(O6.n4[o.c4]||''))}</div><h2>${esc(o.t)}</h2><div class="pl">${esc(o.tp)}</div>
+    <span class="code">KZiS ${o.c}</span> &nbsp; <span class="pill"><i style="background:${C.ramp[o.gi]}"></i>${gi.n}, 2025</span></div>
+   <div class="kp"><div><div class="k">2025 mean</div><div class="big">${f2(o.m25)}</div><div class="sm">spread \u00b1${f2(o.s25)}</div></div>
+     <div><div class="k">Tasks</div><div class="big">${o.nt}</div><div class="sm">in the Polish list</div></div>
+     <div><div class="k">Category</div><div class="big" style="font-size:15px;font-family:var(--f-body);font-weight:600;line-height:1.3">${gi.n}</div><div class="sm">same rules as ISCO-08</div></div></div>
+   <p class="read">${esc(gi.d)}</p>
+   <div class="nav">${par?`<button class="lnk" id="up">\u2190 ISCO-08 occupation ${o.c4} ${esc(par.t)}</button>`:'<span>Polish national group with no ISCO-08 task list</span>'}<button class="lnk" id="showMap">Show on map</button></div>
+   <div class="ptitle"><span>Where the ${o.nt} tasks fall</span></div>
+   <div class="strip" id="strip"><div class="empty">Loading tasks\u2026</div></div>
+   <div class="ptitle"><span>Tasks</span><div class="seg" id="tsort"><button data-t="high" aria-pressed="${st.tsort==='high'}">Highest</button><button data-t="low" aria-pressed="${st.tsort==='low'}">Lowest</button><button data-t="src" aria-pressed="${st.tsort==='src'}">As listed</button></div></div>
+   <div class="leg"><span><i></i>2025 score</span><span>Select a task for the reasoning behind its score</span></div>
+   <ul class="tasks" id="tl"></ul>`;
+  const up=$('#up');if(up)up.onclick=()=>select(o.c4,false);$('#showMap').onclick=()=>goSix(o);
+  p.scrollTop=0;
+  loadK(o.g1).then(K=>{if(st.sel!==o.c)return;const ts=K[o.c]||[];o.k=ts.map(t=>[t[0],null,t[1],null,null,0]);o.just=ts.map(t=>t[2]);$('#strip').innerHTML='';drawStrip(o);drawTasks(o);
+    p.querySelectorAll('#tsort button').forEach(b=>b.onclick=()=>{st.tsort=b.dataset.t;p.querySelectorAll('#tsort button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawTasks(o)})})}
+
+/* ---------- controls ---------- */
+function updateChips(){
+  const cnt=GR.map(()=>0);pool().forEach(o=>{if(st.g1==='all'||String(o.g1)===st.g1){const q=st.q.trim().toLowerCase();if(!q||o._s.includes(q)||(st.tasks&&!o.six&&o._t.includes(q)))cnt[o.gi]++}});
+  $('#chips').innerHTML=GR.map((g,i)=>`<button class="chip" data-i="${i}" aria-pressed="${st.grads.has(i)}"><i style="background:${C.ramp[i]}"></i>${g.n} <span class="n">${cnt[i]}</span></button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;
+    if(st.grads.size===6){st.grads=new Set([i])}else if(st.grads.has(i)){st.grads.delete(i);if(!st.grads.size)st.grads=new Set(GR.map((_,j)=>j))}else st.grads.add(i);render()});
+  const P=pool(),n=filtered().length;$('#stats').innerHTML=anyFilter()?`<b>${n}</b> of ${P.length} occupations shown`:`<b>${P.length.toLocaleString('en')}</b> ${st.level==='6'?'Polish occupations':'occupations'} \u00b7 <b>${P.reduce((s,o)=>s+(o.six?o.nt:o.k.length),0).toLocaleString('en')}</b> tasks`}
+function syncUI(){
+  document.querySelectorAll('#views button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===st.view));
+  document.querySelectorAll('#colorSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===st.color));
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===st.size));
+  document.querySelectorAll('#lvlSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===st.level));
+  const six=st.level==='6';$('#moveTab').hidden=six;document.querySelector('[data-c=chg]').hidden=six;$('#inclTasks').disabled=six;$('#inclLbl').textContent=six?'Task text search works at the ISCO-08 level':'Also search task text';
+  $('#colorGrp').hidden=st.view==='list';$('#sizeGrp').hidden=st.view!=='map'}
+function render(){readTheme();syncUI();updateChips();hideTip();
+  if(st.view==='map')renderMap();else if(st.view==='move')renderMove();else renderList();}
+function wire(){
+  $('#q').oninput=e=>{st.q=e.target.value;render()};
+  $('#inclTasks').onchange=e=>{st.tasks=e.target.checked;render()};
+  document.querySelectorAll('#lvlSeg button').forEach(b=>b.onclick=()=>{st.level=b.dataset.l;st.zoom=[];if(st.level==='6'&&st.view==='move')st.view='map';if(st.level==='6'&&st.color==='chg')st.color='grad';render()});
+  $('#g1').onchange=e=>{st.g1=e.target.value;st.zoom=[];render()};
+  document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>{st.view=b.dataset.v;render()});
+  document.querySelectorAll('#colorSeg button').forEach(b=>b.onclick=()=>{st.color=b.dataset.c;render()});
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.onclick=()=>{st.size=b.dataset.s;render()});
+  let t;new ResizeObserver(()=>{clearTimeout(t);t=setTimeout(()=>{if(st.view!=='list'){const w=$('#view').clientWidth;if(w!==wire.w){wire.w=w;render();if(st.sel)renderPanel()}}},120)}).observe($('#view'));
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{render();renderPanel()});
+  new MutationObserver(()=>{render();renderPanel()}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})}
+
+/* ---------- boot ---------- */
+Promise.all([fetch('data.json').then(r=>r.json()),fetch('o6.json').then(r=>r.json())]).then(([d,o6])=>{
+  D=d;O6=o6;occ=d.occ;
+  occ.forEach(o=>{o.gi=GI[o.p25];o.dm=o.m25-o.m23;o.c2=String(o.c).slice(0,2);byCode[o.c]=o;o._s=(o.c+' '+o.t).toLowerCase();o._t=o.k.map(t=>t[0]).join(' ').toLowerCase();o.grp=[[o.g1,o.g1+' '+D.g1[o.g1]],[o.c2,o.c2+' '+o.n2]]});
+  occ6=o6.l.map(r=>{const c=r[0],c2=String(c).slice(0,2),g1=+String(c)[0];const o={six:true,c,t:r[1],tp:r[2],c4:r[3],m25:r[4],s25:r[5],gi:r[6],nt:r[7],dm:null,g1,c2,_s:(c+' '+r[1]+' '+r[2]).toLowerCase()};
+    o.grp=[[g1,g1+' '+D.g1[g1]],[c2,c2+' '+(o6.n2[c2]||'')],[r[3],r[3]+' '+(o6.n4[r[3]]||'')]];byCode6[c]=o;return o});
+  $('#g1').innerHTML='<option value="all">All major groups</option>'+Object.keys(D.g1).map(k=>`<option value="${k}">${k} ${esc(D.g1[k])}</option>`).join('');
+  $('#defs').innerHTML=GR.map(g=>`<dt>${g.n}</dt><dd>${esc(g.d)}</dd>`).join('');
+  st.sel=4132;wire();render();renderPanel();
+}).catch(()=>{$('#view').innerHTML='<div class="empty">The data file could not be loaded. Reload the page to try again.</div>'});
+})();
+</script>
+
+</body>
+</html>
