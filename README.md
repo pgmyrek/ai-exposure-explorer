@@ -1,12 +1,33 @@
 # AI Exposure Explorer
 
-Static page, no build step. Upload this folder to a GitHub repository and enable GitHub Pages (Settings > Pages > Deploy from branch), or drop it on any static host.
+An interactive explorer for the ILO–NASK Global AI Exposure Index, which measures how exposed occupations are to generative AI (GenAI) at the level of individual tasks.
 
-- `index.html` is the page (loads d3 from cdnjs and fonts from Google Fonts)
-- `ILO-logo.png` (optional): add your white ILO logo here, the same file used in the Shiny app's `www` folder, and it appears in the blue header. Without it the header simply shows no logo.
-- `data.json`: 427 ISCO-08 occupations with task scores (2023 and 2025)
-- `o6.json`: 2,541 Polish 6-digit occupations (summary)
-- `j1-9.json`: model reasoning for ISCO-08 tasks, by major group
-- `k1-9.json`: Polish tasks, scores and shortened reasoning, by major group
+**Live page:** https://pgmyrek.github.io/ai-exposure-explorer/
 
-Sources: ILO Working Paper 140 (doi 10.54394/HETP0387); github.com/pgmyrek/2025_GenAI_scores_ISCO08 and github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations.
+## What it shows
+
+- **Two classification levels.** 427 ISCO-08 four-digit occupations (3,265 tasks) and 2,541 Polish six-digit occupations (KZiS, 29,700 tasks).
+- **Views.** A treemap by occupational group, the mean-versus-spread plot used to define the exposure categories, a 2023-versus-2025 comparison, a reproduction of Figure 17 of the working paper (with smooth curves), and a sortable list.
+- **Occupation detail.** Mean and spread of task scores, change since 2023, and every task with its score and the model reasoning.
+- **Exposure categories.** Not exposed, Minimal, and Gradients 1 to 4, defined from the mean and standard deviation of task scores as in the working paper.
+
+Exposure means the technical potential for GenAI to perform tasks. It is not a prediction of job loss.
+
+## Files
+
+| File | Content |
+|---|---|
+| `index.html` | The page. Loads d3 (cdnjs) and fonts (Google Fonts). No build step. |
+| `data.json` | ISCO-08 occupations with task scores for 2023 and 2025 |
+| `o6.json` | Polish six-digit occupations (summary) |
+| `j1.json` to `j9.json` | Model reasoning for ISCO-08 tasks, by major group |
+| `k1.json` to `k9.json` | Polish tasks with scores and shortened reasoning, by major group |
+
+## Sources
+
+- Gmyrek, P., Berg, J., Kamiński, K., Konopczyński, F., Ładna, A., Nafradi, B., Rosłaniec, K. and Troszyński, M. (2025). *Generative AI and Jobs: A Refined Global Index of Occupational Exposure.* ILO Working Paper 140. https://doi.org/10.54394/HETP0387
+- Task-level data: [2025_GenAI_scores_ISCO08](https://github.com/pgmyrek/2025_GenAI_scores_ISCO08) and [POLAND_2025_GenAI_scores_6digit_occupations](https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations)
+
+## Contact
+
+Pawel Gmyrek, ILO Research Department (RESTAT), gmyrek@ilo.org
