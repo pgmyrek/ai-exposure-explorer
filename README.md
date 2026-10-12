@@ -28,6 +28,10 @@ Exposure means the technical potential for GenAI to perform tasks. It is not a p
 - Gmyrek, P., Berg, J., Kamiński, K., Konopczyński, F., Ładna, A., Nafradi, B., Rosłaniec, K. and Troszyński, M. (2025). *Generative AI and Jobs: A Refined Global Index of Occupational Exposure.* ILO Working Paper 140. https://doi.org/10.54394/HETP0387
 - Task-level data: [2025_GenAI_scores_ISCO08](https://github.com/pgmyrek/2025_GenAI_scores_ISCO08) and [POLAND_2025_GenAI_scores_6digit_occupations](https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations)
 
+## Licence
+
+Released under the [Creative Commons Attribution 4.0 International licence](LICENSE) (CC BY 4.0). You may share and adapt the data and the page, including commercially, as long as you credit the source above and indicate any changes.
+
 ## Contact
 
 Pawel Gmyrek, ILO Research Department (RESTAT), gmyrek@ilo.org
