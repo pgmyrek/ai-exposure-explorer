@@ -28,9 +28,27 @@ Exposure means the technical potential for GenAI to perform tasks. It is not a p
 - Gmyrek, P., Berg, J., Kamiński, K., Konopczyński, F., Ładna, A., Nafradi, B., Rosłaniec, K. and Troszyński, M. (2025). *Generative AI and Jobs: A Refined Global Index of Occupational Exposure.* ILO Working Paper 140. https://doi.org/10.54394/HETP0387
 - Task-level data: [2025_GenAI_scores_ISCO08](https://github.com/pgmyrek/2025_GenAI_scores_ISCO08) and [POLAND_2025_GenAI_scores_6digit_occupations](https://github.com/pgmyrek/POLAND_2025_GenAI_scores_6digit_occupations)
 
-## Licence
+## Licence and citation
 
-Released under the [Creative Commons Attribution 4.0 International licence](LICENSE) (CC BY 4.0). You may share and adapt the data and the page, including commercially, as long as you credit the source above and indicate any changes.
+This work is licensed under the Creative Commons Attribution 4.0 International licence (CC BY 4.0). See [LICENSE](LICENSE) and https://creativecommons.org/licenses/by/4.0/. You may reuse, share (copy and redistribute) and adapt (remix, transform and build upon) the material as detailed in the licence. You must clearly credit the ILO as the source of the material and indicate if changes were made.
+
+**Attribution.** Cite the work as follows:
+
+Gmyrek, P., Berg, J., Kamiński, K., Konopczyński, F., Ładna, A., Nafradi, B., Rosłaniec, K., Troszyński, M. 2025. *Generative AI and Jobs: A Refined Global Index of Occupational Exposure*. ILO Working Paper 140. Geneva: International Labour Office. © ILO. https://doi.org/10.54394/HETP0387
+
+**Translations.** If you translate this work, add the following disclaimer along with the attribution: *This is a translation of a copyrighted work of the International Labour Organization (ILO). This translation has not been prepared, reviewed or endorsed by the ILO and should not be considered an official ILO translation. The ILO disclaims all responsibility for its content and accuracy. Responsibility rests solely with the author(s) of the translation.*
+
+**Adaptations.** If you adapt this work, add the following disclaimer along with the attribution: *This is an adaptation of a copyrighted work of the International Labour Organization (ILO). This adaptation has not been prepared, reviewed or endorsed by the ILO and should not be considered an official ILO adaptation. The ILO disclaims all responsibility for its content and accuracy. Responsibility rests solely with the author(s) of the adaptation.*
+
+**Emblem and logo.** Use of the emblem, name and logo of the ILO is not permitted in connection with translations, adaptations or other derivative works.
+
+**Third-party materials.** This Creative Commons licence does not apply to non-ILO copyright materials. If material is attributed to a third party, the user of such material is solely responsible for clearing the rights with the rights holder and for any claims of infringement.
+
+**Disputes.** Any dispute arising under this licence that cannot be settled amicably shall be referred to arbitration in accordance with the Arbitration Rules of the United Nations Commission on International Trade Law (UNCITRAL). The parties shall be bound by any arbitration award rendered as a result of such arbitration as the final adjudication of such a dispute.
+
+**Disclaimer.** The designations employed and the presentation of material do not imply the expression of any opinion whatsoever on the part of the ILO concerning the legal status of any country, area or territory or of its authorities, or concerning the delimitation of its frontiers or boundaries. The opinions and views expressed are those of the author(s) and do not necessarily reflect the opinions, views or policies of the ILO. Reference to names of firms and commercial products and processes does not imply their endorsement by the ILO.
+
+For rights and licensing, contact rights@ilo.org. Comments on the working paper are welcome at gmyrek@ilo.org.
 
 ## Contact
 
